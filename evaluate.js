@@ -61,7 +61,12 @@
                 })
               };
             })
-           .without('association', 'name', 'entries' )
+            .filter( function( interaction ) { // intra-components
+              return interaction('participants')(0).hasFields('parentId').not()
+                .or( interaction('participants')(1).hasFields('parentId').not() )
+                .or( interaction('participants')(0)('parentId').eq( interaction('participants')(1)('parentId') ).not() )
+            })
+            .without('association', 'name', 'entries' )
       };
     })
   .pluck( 'id', 'interactions' )
