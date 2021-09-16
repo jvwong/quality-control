@@ -1,15 +1,29 @@
 import { Parser } from 'json2csv';
 import _ from 'lodash';
+import Promise from 'bluebird';
+import fs from 'fs';
+import path from 'path';
 
 import docs from './data.json';
 
-const BASE_URL = 'https://biofactoid.org/';
+const DATA_OUTPUT_PATH = './out.csv';
 
 const json2csv = jsonData =>  {
   try {
     const parser = new Parser();
     const csv = parser.parse( jsonData );
     return csv;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const writeFile = Promise.promisify( fs.writeFile );
+const writeToFile = async data =>  {
+  try {
+    await writeFile( DATA_OUTPUT_PATH, data );
+
+    return data;
   } catch (err) {
     console.error(err);
   }
@@ -30,7 +44,7 @@ const main = async () => {
         participants.forEach( participant => {
           const { id: participantId, type: participantType, group, name, xref, components } = participant;
           const entry = {
-            url: `${BASE_URL}document/${id}`,
+            id,
             interactionId,
             interactionType,
             interactionType_score: null,
@@ -52,6 +66,7 @@ const main = async () => {
             components.forEach( component => {
               const { id: componentId, type: componentType, name, xref } = component;
               const componentEntry = _.assign( {}, entry, {
+                interactionId: null,
                 participantId: componentId,
                 participantType: componentType,
                 interactionType: null,
@@ -65,9 +80,10 @@ const main = async () => {
 
         });
       });
-    })
+    });
+
     const csvData = json2csv( formattedDocs );
-    console.log( csvData );
+    await writeToFile( csvData );
 
     process.exit( 0 );
 
