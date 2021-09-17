@@ -1,7 +1,0 @@
-"id","interactionId","interactionType","interactionType_score","evidence","participantId","name","participantType","xref","xref_score","complex_evidence","group","group_score","comments"
-"da73b771-6113-4f95-bb6d-17aff30aff83","d38fb338-5187-463f-9366-386423cf2558","binding",,,"0e83fa6e-e041-43d2-a069-92350dfa2455","NCBP3","protein","ncbigene:55421",,,,,
-"da73b771-6113-4f95-bb6d-17aff30aff83","d38fb338-5187-463f-9366-386423cf2558","binding",,,"a70b74c4-bb11-4552-a75f-d6d392b22be3","Trimeric Exon Junction Complex","complex","",,,"unsigned",,
-"da73b771-6113-4f95-bb6d-17aff30aff83",,,,,"2145b29f-7f9d-4a96-afa1-4731ac6fa721","RBM8A","protein","ncbigene:9939",,,,,
-"da73b771-6113-4f95-bb6d-17aff30aff83",,,,,"f0b3aa8c-ed96-489a-b5b4-9b3cacb53b65","EIF4A3","protein","ncbigene:9775",,,,,
-"da73b771-6113-4f95-bb6d-17aff30aff83",,,,,"6287d207-bb50-44e2-8082-8898798fb0ab","MAGOH","protein","ncbigene:4116",,,,,
-"da73b771-6113-4f95-bb6d-17aff30aff83",,,,,"bef83308-a975-498a-94ec-d59b76233a29","RNA","chemical","CHEBI:33697",,,,,

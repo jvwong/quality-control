@@ -1,14 +1,13 @@
-// with recursion into complex - need to filter out intra-component interactions
-  r.db('factoid')
-
+r.db('factoid')
   .table('document')
-
-    .filter({'id': 'fbd87825-f70a-482f-a9c2-0787be0d412a' })
+    .getAll(
+      '104efd69-c6e5-48e2-95ed-b921af7b3bf3'
+    )
     .map( function( document ){
       return document.merge({ entries: document( 'entries' )( 'id' ) });
     })
 
-   .merge( function( document ) {
+    .merge( function( document ) {
       return {
         interactions:
           r.db('factoid').table('element')
@@ -16,7 +15,12 @@
             .coerceTo( 'array' )
             .pluck( 'id', 'association', 'type', 'name', 'entries' )
             .filter(function (element) {
-              return element('type').eq('protein').not().and( element('type').eq('chemical').not() ).and( element('type').eq('complex').not() );
+              return  element('type').eq('ggp').not()
+                .and( element('type').eq('dna').not() )
+                .and( element('type').eq('rna').not() )
+                .and( element('type').eq('protein').not() )
+                .and( element('type').eq('chemical').not() )
+                .and( element('type').eq('complex').not()  )
             })
             .merge( function( interaction ){
               return {
@@ -69,5 +73,4 @@
             .without('association', 'name', 'entries' )
       };
     })
-  .pluck( 'id', 'interactions' )
-
+    .pluck( 'id', 'interactions' )

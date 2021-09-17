@@ -10,3 +10,5 @@ npm-debug.log
 /download/*
 !/download/README
 .vscode
+*.csv
+*.json
