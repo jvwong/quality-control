@@ -11,6 +11,11 @@ let loadTable = name => db.accessTable( name );
 const getDocuments = async ({ status = 'public', limit = 10 }) => {
   const byStatus = r.row( 'status' ).eq( status )
   const mergeEntryIds = d => d.merge({ entries: d( 'entries' )( 'id' ) });
+  const getPmid = d => {
+    return {
+      pmid: d('article')('PubmedData')('ArticleIdList').filter(function(o){ return o('IdType').eq('pubmed') }).nth(0)('id')
+    }
+  };
   const getInteractions = element => {
     return d => {
       return {
@@ -83,8 +88,9 @@ const getDocuments = async ({ status = 'public', limit = 10 }) => {
   const q = document
     .filter( byStatus )
     .map( mergeEntryIds )
+    .merge( getPmid )
     .merge( getInteractions( element ) )
-    .pluck( 'id', 'interactions' );
+    .pluck( 'id', 'interactions', 'pmid' );
 
   const cursor = await q.limit(limit).run( conn );
   return cursor.toArray();
@@ -93,7 +99,7 @@ const getDocuments = async ({ status = 'public', limit = 10 }) => {
 const formatDocs = docs => {
   const formattedDocs = [];
   docs.forEach( doc => {
-    const { id, interactions } = doc;
+    const { id, interactions, pmid } = doc;
 
     interactions.forEach( interaction => {
       const { id: interactionId, participants, type: interactionType } = interaction;
@@ -102,6 +108,7 @@ const formatDocs = docs => {
         const { id: participantId, type: participantType, group, name, xref, components } = participant;
         const entry = {
           id,
+          pmid,
           interactionId,
           interactionType,
           interactionType_score: null,
