@@ -11,26 +11,23 @@ let loadTable = name => db.accessTable( name );
 const getDocuments = async ({ status = 'public', limit = 10 }) => {
   const byStatus = r.row( 'status' ).eq( status )
   const mergeEntryIds = d => d.merge({ entries: d( 'entries' )( 'id' ) });
-  const getPmid = d => {
-    return {
-      pmid: d('article')('PubmedData')('ArticleIdList').filter(function(o){ return o('IdType').eq('pubmed') }).nth(0)('id')
-    }
-  };
+  const getPmid = d => ({ pmid: d('article')('PubmedData')('ArticleIdList').filter(function(o){ return o('IdType').eq('pubmed') }).nth(0)('id') });
   const getInteractions = element => {
+    const excludeEntities = e => {
+      return  e('type').eq('ggp').not()
+        .and( e('type').eq('dna').not() )
+        .and( e('type').eq('rna').not() )
+        .and( e('type').eq('protein').not() )
+        .and( e('type').eq('chemical').not() )
+        .and( e('type').eq('complex').not()  )
+    };
     return d => {
       return {
         interactions: element
           .getAll( r.args( d( 'entries' ) ) )
           .coerceTo( 'array' )
           .pluck( 'id', 'association', 'type', 'name', 'entries' )
-          .filter(function (e) {
-            return  e('type').eq('ggp').not()
-              .and( e('type').eq('dna').not() )
-              .and( e('type').eq('rna').not() )
-              .and( e('type').eq('protein').not() )
-              .and( e('type').eq('chemical').not() )
-              .and( e('type').eq('complex').not()  )
-          })
+          .filter( excludeEntities )
           .merge( function( i ){
             return {
               participants: i('entries')
@@ -51,7 +48,8 @@ const getDocuments = async ({ status = 'public', limit = 10 }) => {
                             })
                             .merge( function( component ){
                                 return {
-                                  xref: component('association')('dbPrefix').add( ':', component('association')('id') )
+                                  xref: component('association')('dbPrefix').add( ':', component('association')('id') ),
+                                  organismName: r.branch( component('association').hasFields('organismName'), component('association')('organismName'), '' )
                                 }
                             })
                             .without( 'association' )
@@ -65,11 +63,12 @@ const getDocuments = async ({ status = 'public', limit = 10 }) => {
                     xref: r.branch(
                       e.hasFields('association'), e('association')('dbPrefix').add( ':', e('association')('id') ) ,
                       ''
-                    )
+                    ),
+                    organismName: r.branch( e.hasFields({'association': {'organismName': true}}), e('association')('organismName'), '' )
                   }
                 })
               .map( function( e ){
-                return e.pluck( 'id', 'name', 'xref', 'group', 'type', 'parentId', 'components' )
+                return e.pluck( 'id', 'name', 'xref', 'organismName', 'group', 'type', 'parentId', 'components' )
               })
             };
           })
@@ -105,7 +104,7 @@ const formatDocs = docs => {
       const { id: interactionId, participants, type: interactionType } = interaction;
 
       participants.forEach( participant => {
-        const { id: participantId, type: participantType, group, name, xref, components } = participant;
+        const { id: participantId, type: participantType, group, name, xref, components, organismName } = participant;
         const entry = {
           id,
           pmid,
@@ -117,6 +116,7 @@ const formatDocs = docs => {
           name,
           participantType,
           xref,
+          organismName,
           xref_score: null,
           complex_evidence: null,
           group,
@@ -128,7 +128,7 @@ const formatDocs = docs => {
 
         if( components ){
           components.forEach( component => {
-            const { id: componentId, type: componentType, name, xref } = component;
+            const { id: componentId, type: componentType, name, organismName, xref } = component;
             const componentEntry = _.assign( {}, entry, {
               interactionId: null,
               participantId: componentId,
@@ -136,7 +136,8 @@ const formatDocs = docs => {
               interactionType: null,
               group: null,
               name,
-              xref
+              xref,
+              organismName
             });
             formattedDocs.push( componentEntry );
           });
